@@ -5,37 +5,8 @@ import os
 import shutil
 import urllib.request
 
-# This is something that needs to be configured by you
-# CHANNEL_ID --> CHANNEL_NUMBER (must be int in string)
-transformations = [
-    "TVP 1 HD",
-    "TVP 2 HD",
-    "TVP 3 Warszawa",
-    "Polsat",
-    "TVN HD",
-    "TVN",
-    "TV 4",
-    "TV Puls",
-    "TVN 7 HD",
-    "TVN 7",
-    "TV Puls 2",
-    "TV6",
-    "Super Polsat",
-    "ESKA TV",
-    "TTV HD",
-    "TTV",
-    "Polo TV",
-    "ATM Rozrywka",
-    "TV Trwam",
-    "Stopklatka TV",
-    "Fokus TV",
-    "TVP ABC",
-    "TVP Kultura",
-    "TVP Historia",
-    "TVP Sport",
-    "TVP Info",
-]
-
+# Using "".format() to make it compatibile with python pre 3.7 as it is going to be used
+# on RPis and other older machines
 
 def download(url, file_name):
     # Download the file from `url` and save it locally under `file_name`:

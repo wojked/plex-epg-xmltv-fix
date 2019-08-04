@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 import urllib.request
@@ -43,23 +44,61 @@ def download(url, file_name):
     print(f"Downloaded {url} as {file_name}")
 
 
-def rename_remap(file_in, file_out):
+def fix_channel_name(channel_name):
+    """ For now, removes only spaces"""
+    return channel_name.replace(" ", "")
+
+
+def generate_channel_map(channel_list):
+    """
+        This function fixes all the channels on the list.
+    """
+    channel_map = {}
+    for channel in channel_list:
+        channel_map[channel] = fix_channel_name(channel_name=channel)
+
+    return channel_map
+
+
+def patch_channel_map(channel_map, forced_channel_map=None, prefix="0"):
+    """
+        For the generated channel map, adds forced identifiers 
+    """
+    forced_channel_map = forced_channel_map or {}
+
+    patched_channel_map = {}
+    for channel_initial_name, channel_target_name in channel_map.items():
+        patched_channel_name = channel_target_name
+
+        if channel_initial_name in forced_channel_map.keys():
+            forced_channel_id = forced_channel_map.get(channel_initial_name, "")
+            patched_channel_name = f"{prefix}{forced_channel_id}{patched_channel_name}"
+
+        patched_channel_map[channel_initial_name] = patched_channel_name
+
+    return patched_channel_map
+
+
+def rename_remap(file_in, file_out, forced_channel_map=None):
+    forced_channel_map = forced_channel_map or {}
     with open(file_in, "rt") as fin:
         with open(file_out, "wt") as fout:
             for line in fin:
-                fixed_line = line
-                range_size = len(transformations)
-                for i in range(range_size):
-                    channel_name = transformations[i]
-                    # What to FIX?
-                    input_string = f'="{channel_name}"'
-                    # Add numbering
-                    output_number = i + 1
-                    output_string = f'="0{output_number}{channel_name}"'
-                    # Remove spaces
-                    output_string = output_string.replace(" ", "")
+                # Pass just the keys of forced_channel_map for now (in the end, should pass all the channels from xml)
+                channel_map = generate_channel_map(
+                    channel_list=forced_channel_map.keys()
+                )
+                # Force channel numbers
+                channel_map = patch_channel_map(
+                    channel_map=channel_map, forced_channel_map=forced_channel_map
+                )
 
-                    fixed_line = fixed_line.replace(input_string, output_string)
+                # Try to fix lines with all the possible fixes, iterate over channel_map
+                fixed_line = line
+                for channel_name, fixed_channel_name in channel_map.items():
+                    fixed_line = fixed_line.replace(
+                        f'="{channel_name}"', f'="{fixed_channel_name}"'
+                    )
 
                 fout.write(fixed_line)
 
@@ -88,11 +127,14 @@ if __name__ == "__main__":
     parser.add_argument("target_path", help="place on the server")
     args = parser.parse_args()
 
-    # print(args.url)
-    # print(args.epg_file_name)
-    # print(args.epgfixed_file_name)
-    # print(args.target_path)
-
     download(url=args.url, file_name=args.epg_file_name)
-    rename_remap(file_in=args.epg_file_name, file_out=args.epgfixed_file_name)
+    forced_channel_map = {}
+    with open('map.json', 'r') as forced_channel_json:
+        forced_channel_map = json.load(forced_channel_json)
+
+    rename_remap(
+        file_in=args.epg_file_name,
+        file_out=args.epgfixed_file_name,
+        forced_channel_map=forced_channel_map,
+    )
     upload(filename=args.epgfixed_file_name, target_path=args.target_path)

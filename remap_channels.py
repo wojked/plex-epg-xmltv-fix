@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument("target_path", help="place on the server")
     args = parser.parse_args()
 
-    # download(url=args.url, file_name=args.epg_file_name)
+    download(url=args.url, file_name=args.epg_file_name)
     forced_channel_map = {}
     with open('map.json', 'r') as forced_channel_json:
         forced_channel_map = json.load(forced_channel_json)
@@ -137,4 +137,4 @@ if __name__ == "__main__":
         file_out=args.epgfixed_file_name,
         forced_channel_map=forced_channel_map,
     )
-    # upload(filename=args.epgfixed_file_name, target_path=args.target_path)
+    upload(filename=args.epgfixed_file_name, target_path=args.target_path)

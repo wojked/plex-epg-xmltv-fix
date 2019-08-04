@@ -157,7 +157,7 @@ def upload_ftp(
                 "filename": filename,
                 "ftp_address": ftp_address,
                 "destination_dir": destination_dir,
-                "destination_filename": {destination_filename},
+                "destination_filename": destination_filename,
             }
         )
     )

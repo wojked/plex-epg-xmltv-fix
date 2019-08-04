@@ -1,5 +1,6 @@
 import argparse
 import json
+import ftplib
 import os
 import shutil
 import urllib.request
@@ -106,35 +107,61 @@ def rename_remap(file_in, file_out, forced_channel_map=None):
 
 
 def upload(filename, target_path):
+    """
+        Obsolete
+    """
     destination_filename = os.path.join(target_path, filename)
     shutil.copyfile(filename, destination_filename)
 
     print(f"Uploaded {filename} to {destination_filename}")
 
 
+def upload_ftp(
+    filename, ftp_address, username, password, destination_dir, destination_filename
+):
+    with ftplib.FTP(ftp_address) as ftp:
+        ftp.login(username, password)
+        ftp.cwd(destination_dir)
+        ftp.dir()
+
+        with open(filename, "rb") as fp:
+            cmd = f"STOR {destination_filename}"
+            ftp.storbinary(cmd, fp)
+
+        ftp.close()
+
+    print(f"Uploaded {filename} to FTP: {ftp_address}/{destination_dir}/{destination_filename}")        
+
+
 if __name__ == "__main__":
     """ 
     Usage example: 
-        python remap_channels.py https://URL/guide.xml epg.xml epg-fixed.xml /network/tvdir/
+        python remap_channels.py config.json
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("url", help="source of the XML EPG")
-    parser.add_argument("epg_file_name", help="desired downloaded file name")
-    parser.add_argument(
-        "epgfixed_file_name", help="desired target name of the XML file"
-    )
-    parser.add_argument("target_path", help="place on the server")
+    parser.add_argument("config_filename", help="config JSON file name")      
     args = parser.parse_args()
+    
+    with open(args.config_filename, "r") as config_json:
+        config = json.load(config_json)    
 
-    download(url=args.url, file_name=args.epg_file_name)
-    forced_channel_map = {}
-    with open('map.json', 'r') as forced_channel_json:
-        forced_channel_map = json.load(forced_channel_json)
+        epg = config['epg']
+        ftp_creds = config['ftp']        
 
-    rename_remap(
-        file_in=args.epg_file_name,
-        file_out=args.epgfixed_file_name,
-        forced_channel_map=forced_channel_map,
-    )
-    upload(filename=args.epgfixed_file_name, target_path=args.target_path)
+        download(url=epg['source'], file_name=epg['local_filename'])
+
+        rename_remap(
+            file_in=epg['local_filename'],
+            file_out=epg['fixed_local_filename'],
+            forced_channel_map=config['channels'],
+        )
+
+        upload_ftp(
+            filename=epg['fixed_local_filename'],
+            ftp_address=ftp_creds["address"],
+            username=ftp_creds["username"],
+            password=ftp_creds["password"],
+            destination_dir=ftp_creds["destination_dir"],
+            destination_filename=ftp_creds["destination_filename"],
+        )

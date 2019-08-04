@@ -43,7 +43,7 @@ def download(url, file_name):
         shutil.copyfileobj(response, out_file)
 
     print(
-        "Downloaded {url} as {file_name}".format({"url": url, "file_name": file_name})
+        "Downloaded {url} as {file_name}".format(**{"url": url, "file_name": file_name})
     )
 
 
@@ -76,7 +76,7 @@ def patch_channel_map(channel_map, forced_channel_map=None, prefix="0"):
         if channel_initial_name in forced_channel_map.keys():
             forced_channel_id = forced_channel_map.get(channel_initial_name, "")
             patched_channel_name = "{prefix}{forced_channel_id}{patched_channel_name}".format(
-                {
+                **{
                     "prefix": prefix,
                     "forced_channel_id": forced_channel_id,
                     "patched_channel_name": patched_channel_name,
@@ -106,9 +106,9 @@ def rename_remap(file_in, file_out, forced_channel_map=None):
                 fixed_line = line
                 for channel_name, fixed_channel_name in channel_map.items():
                     fixed_line = fixed_line.replace(
-                        '="{channel_name}"'.format({"channel_name": channel_name}),
+                        '="{channel_name}"'.format(**{"channel_name": channel_name}),
                         '="{fixed_channel_name}"'.format(
-                            {"fixed_channel_name": fixed_channel_name}
+                            **{"fixed_channel_name": fixed_channel_name}
                         ),
                     )
 
@@ -116,7 +116,7 @@ def rename_remap(file_in, file_out, forced_channel_map=None):
 
     print(
         "Remapped {file_in} to {file_out}".format(
-            {"file_in": file_in, "file_out": file_out}
+            **{"file_in": file_in, "file_out": file_out}
         )
     )
 
@@ -130,7 +130,7 @@ def upload(filename, target_path):
 
     print(
         "Uploaded {filename} to {destination_filename}".format(
-            {"filename": filename, "destination_filename": destination_filename}
+            **{"filename": filename, "destination_filename": destination_filename}
         )
     )
 
@@ -145,7 +145,7 @@ def upload_ftp(
 
         with open(filename, "rb") as fp:
             cmd = "STOR {destination_filename}".format(
-                {"destination_filename": destination_filename}
+                **{"destination_filename": destination_filename}
             )
             ftp.storbinary(cmd, fp)
 
@@ -153,7 +153,7 @@ def upload_ftp(
 
     print(
         "Uploaded {filename} to FTP: {ftp_address}/{destination_dir}/{destination_filename}".format(
-            {
+            **{
                 "filename": filename,
                 "ftp_address": ftp_address,
                 "destination_dir": destination_dir,

@@ -8,6 +8,7 @@ import urllib.request
 # Using "".format() to make it compatibile with python pre 3.7 as it is going to be used
 # on RPis and other older machines
 
+
 def download(url, file_name):
     # Download the file from `url` and save it locally under `file_name`:
     with urllib.request.urlopen(url) as response, open(file_name, "wb") as out_file:
@@ -34,7 +35,7 @@ def generate_channel_map(channel_list):
     return channel_map
 
 
-def patch_channel_map(channel_map, forced_channel_map=None, prefix="0"):
+def patch_channel_map(channel_map, forced_channel_map=None):
     """
         For the generated channel map, adds forced identifiers 
     """
@@ -45,13 +46,9 @@ def patch_channel_map(channel_map, forced_channel_map=None, prefix="0"):
         patched_channel_name = channel_target_name
 
         if channel_initial_name in forced_channel_map.keys():
-            forced_channel_id = forced_channel_map.get(channel_initial_name, "")
-            patched_channel_name = "{prefix}{forced_channel_id}{patched_channel_name}".format(
-                **{
-                    "prefix": prefix,
-                    "forced_channel_id": forced_channel_id,
-                    "patched_channel_name": patched_channel_name,
-                }
+            forced_channel_id = forced_channel_map[channel_initial_name]
+            patched_channel_name = "{forced_channel_id}".format(
+                **{"forced_channel_id": forced_channel_id}
             )
 
         patched_channel_map[channel_initial_name] = patched_channel_name
@@ -148,7 +145,8 @@ if __name__ == "__main__":
         config = json.load(config_json)
 
         epg = config["epg"]
-        ftp_creds = config["ftp"]
+        shared_resource = config.get("shared_resource")
+        ftp_creds = config.get("ftp")
 
         download(url=epg["source"], file_name=epg["local_filename"])
 
@@ -158,11 +156,18 @@ if __name__ == "__main__":
             forced_channel_map=config["channels"],
         )
 
-        upload_ftp(
-            filename=epg["fixed_local_filename"],
-            ftp_address=ftp_creds["address"],
-            username=ftp_creds["username"],
-            password=ftp_creds["password"],
-            destination_dir=ftp_creds["destination_dir"],
-            destination_filename=ftp_creds["destination_filename"],
-        )
+        if shared_resource is not None:
+            upload(
+                filename=shared_resource["destination_filename"],
+                target_path=shared_resource["destination_dir"],
+            )
+
+        if ftp_creds is not None:
+            upload_ftp(
+                filename=epg["fixed_local_filename"],
+                ftp_address=ftp_creds["address"],
+                username=ftp_creds["username"],
+                password=ftp_creds["password"],
+                destination_dir=ftp_creds["destination_dir"],
+                destination_filename=ftp_creds["destination_filename"],
+            )

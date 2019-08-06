@@ -61,8 +61,8 @@ def patch_channel_map(channel_map, forced_channel_map=None, prefix="0"):
 
 def rename_remap(file_in, file_out, forced_channel_map=None):
     forced_channel_map = forced_channel_map or {}
-    with open(file_in, "rt") as fin:
-        with open(file_out, "wt") as fout:
+    with open(file_in, "rt", encoding="utf-8") as fin:
+        with open(file_out, "wt", encoding="utf-8") as fout:
             for line in fin:
                 # Pass just the keys of forced_channel_map for now (in the end, should pass all the channels from xml)
                 channel_map = generate_channel_map(

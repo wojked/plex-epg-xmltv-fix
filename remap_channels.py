@@ -120,6 +120,7 @@ def upload_ftp(
             )
             ftp.storbinary(cmd, fp)
 
+        ftp.dir()
         ftp.close()
 
     print(
